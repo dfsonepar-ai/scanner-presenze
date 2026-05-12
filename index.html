@@ -31,12 +31,20 @@ function onScanSuccess(decodedText) {
   alert("✅ QR: " + decodedText);
 
   // invio dati (per ora console)
-  console.log({
+
+fetch("https://make.powerautomate.com/environments/4b8d92cb-9522-e43c-b66e-80c4f04df14c/flows/ae2d0394-3508-447f-bcc7-27e102b2bb6a?v3=true", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
     site: decodedText,
     user: userName,
     userId: userId,
-    time: new Date()
-  });
+    time: new Date().toISOString()
+  })
+});
+
 }
 
 const scanner = new Html5QrcodeScanner("reader", {
