@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Scanner QR Presenze</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+
+<body>
+
+<h2>Scanner QR Presenze</h2>
+
+<div id="reader" style="width:300px;"></div>
+
+<script>
+function onScanSuccess(decodedText) {
+  alert("✅ QR letto: " + decodedText);
+}
+
+const scanner = new Html5QrcodeScanner("reader", {
+  fps: 10,
+  qrbox: 250
+});
+
+scanner.render(onScanSuccess);
+</script>
+
+</body>
+</html>
