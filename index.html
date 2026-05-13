@@ -15,6 +15,7 @@
 <script>
 let userName = "";
 let userId = "";
+let scanned = false;
 
 // inizializza Teams
 microsoftTeams.app.initialize().then(() => {
@@ -28,23 +29,29 @@ microsoftTeams.app.initialize().then(() => {
 
 // scanner QR
 function onScanSuccess(decodedText) {
+
+  if (scanned) return;   // ✅ blocco doppio scan
+  scanned = true;
+
   alert("✅ QR: " + decodedText);
 
-  // invio dati (per ora console)
+  fetch("URL_FLOW_CORRETTO", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      site: decodedText,
+      user: userName,
+      userId: userId,
+      time: new Date().toISOString()
+    })
+  });
+setTimeout(() => {
+  scanned = false;
+}, 5000); // 5 secondi
 
-fetch("https://4b8d92cb9522e43cb66e80c4f04df1.4c.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/186f84364ae04ca8a8aa8c114442c629/triggers/manual/paths/invoke?api-version=1", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    site: decodedText,
-    user: userName,
-    userId: userId,
-    time: new Date().toISOString()
-  })
-});
-
+  
 }
 
 const scanner = new Html5QrcodeScanner("reader", {
@@ -53,7 +60,7 @@ const scanner = new Html5QrcodeScanner("reader", {
 });
 
 scanner.render(onScanSuccess);
-  
+
 </script>
 </body>
 </html>
