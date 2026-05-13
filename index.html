@@ -2,7 +2,11 @@
 <html>
 <head>
   <title>Scanner QR Presenze</title>
+
+  <!-- Libreria QR -->
   <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
+  <!-- Teams SDK -->
   <script src="https://res.cdn.office.net/teams-js/2.0.0/js/MicrosoftTeams.min.js"></script>
 </head>
 
@@ -17,7 +21,7 @@ let userName = "";
 let userId = "";
 let scanned = false;
 
-// inizializza Teams
+// ✅ Inizializzazione Teams
 microsoftTeams.app.initialize().then(() => {
   microsoftTeams.app.getContext().then(ctx => {
     userName = ctx.user.displayName;
@@ -27,15 +31,17 @@ microsoftTeams.app.initialize().then(() => {
   });
 });
 
-// scanner QR
+// ✅ Funzione scanner QR
 function onScanSuccess(decodedText) {
 
-  if (scanned) return;   // ✅ blocco doppio scan
+  // ✅ blocco doppia scansione
+  if (scanned) return;
   scanned = true;
 
-  alert("✅ QR: " + decodedText);
+  alert("✅ QR letto: " + decodedText);
 
-  fetch("URL_FLOW_CORRETTO", {
+  // ✅ chiamata Power Automate
+  fetch("https://4b8d92cb9522e43cb66e80c4f04df1.4c.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/186f84364ae04ca8a8aa8c114442c629/triggers/manual/paths/invoke?api-version=1", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -46,14 +52,28 @@ function onScanSuccess(decodedText) {
       userId: userId,
       time: new Date().toISOString()
     })
-  });
-setTimeout(() => {
-  scanned = false;
-}, 5000); // 5 secondi
+  })
+  .then(() => {
+    alert("✅ Presenza registrata");
 
-  
+    // ✅ vibrazione su mobile (opzionale)
+    if (navigator.vibrate) {
+      navigator.vibrate(200);
+    }
+  })
+  .catch((err) => {
+    console.error(err);
+    alert("❌ Errore invio dati");
+  })
+  .finally(() => {
+    // ✅ reset scanner dopo 5 secondi
+    setTimeout(() => {
+      scanned = false;
+    }, 5000);
+  });
 }
 
+// ✅ Avvio scanner
 const scanner = new Html5QrcodeScanner("reader", {
   fps: 10,
   qrbox: 250
@@ -62,6 +82,8 @@ const scanner = new Html5QrcodeScanner("reader", {
 scanner.render(onScanSuccess);
 
 </script>
+
 </body>
 </html>
+
 
