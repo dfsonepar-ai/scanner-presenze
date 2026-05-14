@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-<!-- test11 -->
-  
+  <!-- test11 -->
+
   <title>Scanner QR Presenze</title>
 
   <!-- Libreria QR -->
@@ -14,103 +14,98 @@
 
 <body>
 
-<h2>Scanner QR Presenze</h2>
+  <h2>Scanner QR Presenze</h2>
 
-<div id="reader" style="width:300px;"></div>
+  <div id="reader" style="width:300px;"></div>
 
-<script>
-let userName = "";
-let userId = "";
-let userEmail = "";  
-let scanned = false;
+  <script>
+    let userName = "";
+    let userId = "";
+    let userEmail = "";
+    let scanned = false;
 
-// ✅ Inizializzazione Teams
-microsoftTeams.app.initialize().then(() => {
-  microsoftTeams.app.getContext().then(ctx => {
-    userName = ctx.user.displayName;
-    userId = ctx.user.id;
-    userEmail = ctx.user.userPrincipalName;
-    console.log("Utente:", userName);
-  });
-});
-
-// ✅ Funzione scanner QR
-function onScanSuccess(decodedText) {
-
-  // ✅ blocco doppia scansione
-  if (scanned) return;
-  scanned = true;
-
-  alert("✅ QR letto: " + decodedText);
-
-  // ✅ chiamata Power Automate
-  fetch("https://4b8d92cb9522e43cb66e80c4f04df1.4c.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/186f84364ae04ca8a8aa8c114442c629/triggers/manual/paths/invoke?api-version=1", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      site: decodedText,
-      user: userEmail,
-      userId: userId,
-      time: new Date().toISOString()
-    })
-  })
-  .then(() => {
-    alert("✅ Presenza registrata");
-
-    // ✅ vibrazione su mobile (opzionale)
-    if (navigator.vibrate) {
-      navigator.vibrate(200);
-    }
-  })
-  .catch((err) => {
-    console.error(err);
-    alert("❌ Errore invio dati");
-  })
-  .finally(() => {
-    // ✅ reset scanner dopo 5 secondi
-    setTimeout(() => {
-      scanned = false;
-    }, 5000);
-  });
-}
-
-// ✅ Avvio scanner
-
-const html5QrCode = new Html5Qrcode("reader");
-
-function startScanner() {
-  Html5Qrcode.getCameras().then(devices => {
-    if (devices && devices.length) {
-
-      let cameraId = devices[0].id; // prima camera
-
-      html5QrCode.start(
-        cameraId,
-        {
-          fps: 10,
-          qrbox: 250
-        },
-        onScanSuccess
-      ).catch(err => {
-        console.error("Errore avvio camera", err);
-        alert("❌ Impossibile accedere alla camera");
+    // ✅ Inizializzazione Teams
+    microsoftTeams.app.initialize().then(() => {
+      microsoftTeams.app.getContext().then(ctx => {
+        userName = ctx.user.displayName;
+        userId = ctx.user.id;
+        userEmail = ctx.user.userPrincipalName;
+        console.log("Utente:", userName);
       });
+    });
 
+    // ✅ Funzione scanner QR
+    function onScanSuccess(decodedText) {
+
+      if (scanned) return;
+      scanned = true;
+
+      alert("✅ QR letto: " + decodedText);
+
+      fetch("https://4b8d92cb9522e43cb66e80c4f04df1.4c.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/186f84364ae04ca8a8aa8c114442c629/triggers/manual/paths/invoke?api-version=1", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          site: decodedText,
+          user: userEmail,
+          userId: userId,
+          time: new Date().toISOString()
+        })
+      })
+      .then(() => {
+        alert("✅ Presenza registrata");
+
+        if (navigator.vibrate) {
+          navigator.vibrate(200);
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        alert("❌ Errore invio dati");
+      })
+      .finally(() => {
+        setTimeout(() => {
+          scanned = false;
+        }, 5000);
+      });
     }
-  }).catch(err => {
-    console.error("Errore dispositivi camera", err);
-  });
-}
 
-// ✅ Avvio scanner dopo il caricamento
-startScanner();
+    // ✅ Scanner compatibile Teams
+    const html5QrCode = new Html5Qrcode("reader");
 
+    function startScanner() {
+      Html5Qrcode.getCameras().then(devices => {
+        if (devices && devices.length) {
 
-</script>
+          let cameraId = devices[0].id;
+
+          html5QrCode.start(
+            cameraId,
+            {
+              fps: 10,
+              qrbox: 250
+            },
+            onScanSuccess
+          ).catch(err => {
+            console.error("Errore avvio camera", err);
+            alert("❌ Impossibile accedere alla camera");
+          });
+
+        }
+      }).catch(err => {
+        console.error("Errore dispositivi camera", err);
+      });
+    }
+
+    // ✅ Avvio corretto (Teams fix)
+    document.addEventListener("DOMContentLoaded", function () {
+      startScanner();
+    });
+
+  </script>
 
 </body>
 </html>
-
 
