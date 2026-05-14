@@ -77,12 +77,36 @@ function onScanSuccess(decodedText) {
 }
 
 // ✅ Avvio scanner
-const scanner = new Html5QrcodeScanner("reader", {
-  fps: 10,
-  qrbox: 250
-});
 
-scanner.render(onScanSuccess);
+const html5QrCode = new Html5Qrcode("reader");
+
+function startScanner() {
+  Html5Qrcode.getCameras().then(devices => {
+    if (devices && devices.length) {
+
+      let cameraId = devices[0].id; // prima camera
+
+      html5QrCode.start(
+        cameraId,
+        {
+          fps: 10,
+          qrbox: 250
+        },
+        onScanSuccess
+      ).catch(err => {
+        console.error("Errore avvio camera", err);
+        alert("❌ Impossibile accedere alla camera");
+      });
+
+    }
+  }).catch(err => {
+    console.error("Errore dispositivi camera", err);
+  });
+}
+
+// ✅ Avvio scanner dopo il caricamento
+startScanner();
+
 
 </script>
 
