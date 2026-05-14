@@ -72,21 +72,35 @@ function startScanner() {
   html5QrCode = new Html5Qrcode("reader");
 
   Html5Qrcode.getCameras().then(devices => {
-    if (devices && devices.length) {
+
+    console.log("Cameras trovate:", devices); // ✅ DEBUG
+
+    if (devices && devices.length > 0) {
+
+      // ✅ prova prima camera
+      let cameraId = devices[0].id;
 
       html5QrCode.start(
-        devices[0].id,
+        cameraId,
         {
           fps: 10,
           qrbox: 250
         },
         onScanSuccess
-      );
+      ).then(() => {
+        console.log("✅ Scanner avviato");
+      }).catch(err => {
+        console.error("Errore start camera:", err);
+        alert("❌ Errore avvio camera: " + err);
+      });
 
+    } else {
+      alert("❌ Nessuna camera disponibile");
     }
+
   }).catch(err => {
-    console.error(err);
-    alert("❌ Errore accesso camera");
+    console.error("Errore getCameras:", err);
+    alert("❌ Accesso camera bloccato");
   });
 }
 
