@@ -21,6 +21,7 @@
 <script>
 let userName = "";
 let userId = "";
+let userEmail = "";  
 let scanned = false;
 
 // ✅ Inizializzazione Teams
@@ -28,7 +29,7 @@ microsoftTeams.app.initialize().then(() => {
   microsoftTeams.app.getContext().then(ctx => {
     userName = ctx.user.displayName;
     userId = ctx.user.id;
-
+    userEmail = ctx.user.userPrincipalName;
     console.log("Utente:", userName);
   });
 });
@@ -50,7 +51,7 @@ function onScanSuccess(decodedText) {
     },
     body: JSON.stringify({
       site: decodedText,
-      user: userName,
+      user: userEmail,
       userId: userId,
       time: new Date().toISOString()
     })
