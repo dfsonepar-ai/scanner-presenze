@@ -15,7 +15,7 @@
   <h2>Scanner QR Presenze</h2>
 
   <!-- ✅ Bottone -->
-  <button onclick="startScanner()" style="padding:10px 20px; font-size:16px;">
+  <button onclick="startScanner()" style="padding:30px 70px; font-size:26px;">
     📷 Avvia scansione
   </button>
 
@@ -27,7 +27,7 @@
   <div id="reader" style="width:300px;"></div>
 
   <!-- Debug -->
-  <div id="debug" style="margin-top:20px; color:red; font-size:12px;"></div>
+  <div id="debug" style="margin-top:28px; color:red; font-size:18px;"></div>
 
 <script>
 
@@ -134,12 +134,12 @@ function startScanner() {
         }
 
       }).catch(err => {
-        debug("❌ Errore accesso camera: " + err);
+        debug("❌ Errore accesso camera: " + err.name + " - " + err.message);
       });
 
     })
     .catch(() => {
-      debug("❌ Permesso camera NEGATO: " + err.name + " - " + err.message);
+      debug("❌ Permesso camera NEGATO:");
     });
 }
 
