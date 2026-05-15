@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<title>Test getUserMedia</title>
+</head>
+<body>
+<h2>Verifica accesso alla fotocamera</h2>
+<button id="startBtn">Avvia Fotocamera</button>
+<video id="video" width="320" height="240" autoplay></video>
+<p id="status"></p>
+
+<script>
+  const startBtn = document.getElementById('startBtn');
+  const video = document.getElementById('video');
+  const status = document.getElementById('status');
+
+  startBtn.addEventListener('click', () => {
+    // Richiesta accesso alla fotocamera
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        status.textContent = "Accesso alla fotocamera concesso.";
+        video.srcObject = stream;
+      })
+      .catch(err => {
+        status.textContent = "Errore: " + err.name + " - " + err.message;
+        console.error(err);
+      });
+  });
+</script>
+</body>
+</html>
