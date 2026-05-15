@@ -1,18 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Scanner QR Presenze</title>
+
+  <!-- Libreria QR -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
+  <!-- Teams SDK -->
+  <script src="https://res.cdn.office.net/teams-js/2.0.0/js/MicrosoftTeams.min.js"></script>
+</head>
+
 <body>
 
   <h2>Scanner QR Presenze</h2>
 
-  <!-- ✅ Bottone avvio -->
+  <!-- ✅ Bottone -->
   <button onclick="startScanner()" style="padding:10px 20px; font-size:16px;">
     📷 Avvia scansione
   </button>
+
   <p>Tocca il pulsante per attivare la fotocamera</p>
+
   <br><br>
 
+  <!-- Scanner -->
   <div id="reader" style="width:300px;"></div>
+
+  <!-- Debug -->
+  <div id="debug" style="margin-top:20px; color:red; font-size:12px;"></div>
 
 <script>
 
+// ✅ debug visivo
+function debug(msg) {
+  console.log(msg);
+  document.getElementById("debug").innerText += msg + "\n";
+}
+
+// variabili
 let userName = "";
 let userId = "";
 let userEmail = "";
@@ -25,18 +50,20 @@ microsoftTeams.app.initialize().then(() => {
     userName = ctx.user.displayName;
     userId = ctx.user.id;
     userEmail = ctx.user.userPrincipalName;
+
+    debug("👤 Utente: " + userEmail);
   });
 });
 
-// ✅ funzione scan
+// ✅ funzione quando legge QR
 function onScanSuccess(decodedText) {
 
   if (scanned) return;
   scanned = true;
 
-  alert("✅ QR letto: " + decodedText);
+  debug("✅ QR letto: " + decodedText);
 
-  fetch("URL_FLOW_CORRETTO", {
+  fetch("https://4b8d92cb9522e43cb66e80c4f04df1.4c.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/186f84364ae04ca8a8aa8c114442c629/triggers/manual/paths/invoke?api-version=1", {  // 👈 SOSTITUISCI
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -49,15 +76,14 @@ function onScanSuccess(decodedText) {
     })
   })
   .then(() => {
-    alert("✅ Presenza registrata");
+    debug("✅ Presenza registrata");
 
     if (navigator.vibrate) {
       navigator.vibrate(200);
     }
   })
   .catch(err => {
-    console.error(err);
-    alert("❌ Errore invio dati");
+    debug("❌ Errore invio: " + err);
   })
   .finally(() => {
     setTimeout(() => {
@@ -66,44 +92,59 @@ function onScanSuccess(decodedText) {
   });
 }
 
-// ✅ avvio camera (manuale)
+// ✅ AVVIO CAMERA (FIX DEFINITIVO)
 function startScanner() {
 
-  html5QrCode = new Html5Qrcode("reader");
+  debug("🔄 Avvio scanner...");
 
-  Html5Qrcode.getCameras().then(devices => {
+  navigator.mediaDevices.getUserMedia({ video: true })
+    .then(() => {
 
-    console.log("Cameras trovate:", devices); // ✅ DEBUG
+      debug("✅ Permesso camera OK");
 
-    if (devices && devices.length > 0) {
+      html5QrCode = new Html5Qrcode("reader");
 
-      // ✅ prova prima camera
-      let cameraId = devices[0].id;
+      Html5Qrcode.getCameras().then(devices => {
 
-      html5QrCode.start(
-        cameraId,
-        {
-          fps: 10,
-          qrbox: 250
-        },
-        onScanSuccess
-      ).then(() => {
-        console.log("✅ Scanner avviato");
+        debug("📷 Camere trovate: " + devices.length);
+
+        if (devices && devices.length > 0) {
+
+          let cameraId = devices[0].id;
+
+          debug("🎥 Uso camera: " + cameraId);
+
+          html5QrCode.start(
+            cameraId,
+            {
+              fps: 10,
+              qrbox: 250
+            },
+            onScanSuccess
+          )
+          .then(() => {
+            debug("✅ Scanner avviato");
+          })
+          .catch(err => {
+            debug("❌ Errore авvio: " + err);
+          });
+
+        } else {
+          debug("❌ Nessuna camera trovata");
+        }
+
       }).catch(err => {
-        console.error("Errore start camera:", err);
-        alert("❌ Errore avvio camera: " + err);
+        debug("❌ Errore accesso camera: " + err);
       });
 
-    } else {
-      alert("❌ Nessuna camera disponibile");
-    }
-
-  }).catch(err => {
-    console.error("Errore getCameras:", err);
-    alert("❌ Accesso camera bloccato");
-  });
+    })
+    .catch(() => {
+      debug("❌ Permesso camera NEGATO");
+    });
 }
 
 </script>
 
 </body>
+</html>
+
