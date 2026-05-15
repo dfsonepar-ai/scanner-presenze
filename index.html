@@ -139,7 +139,7 @@ function startScanner() {
 
     })
     .catch(() => {
-      debug("❌ Permesso camera NEGATO");
+      debug("❌ Permesso camera NEGATO: " + err.name + " - " + err.message);
     });
 }
 
