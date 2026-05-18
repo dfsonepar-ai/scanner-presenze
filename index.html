@@ -1,150 +1,116 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
-  <title>Scanner QR Presenze</title>
+<meta charset="UTF-8" />
+<title>Scanner QR Test</title>
 
-  <!-- Libreria QR -->
-  <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+<!-- ✅ Libreria corretta -->
+<script src="html5-qrcode.min.js"></script>
 
-  <!-- Teams SDK -->
-  <script src="https://res.cdn.office.net/teams-js/2.0.0/js/MicrosoftTeams.min.js"></script>
 </head>
 
 <body>
 
-  <h2>Scanner QR Presenze</h2>
+<h2>Scanner QR Presenze</h2>
 
-  <!-- ✅ Bottone -->
-  <button onclick="startScanner()" style="padding:30px 70px; font-size:26px;">
-    📷 Avvia scansione
-  </button>
+<button id="startBtn" style="padding:10px; font-size:16px;">
+📷 Avvia Scansione
+</button>
 
-  <p>Tocca il pulsante per attivare la fotocamera</p>
+<p id="status">Premi il pulsante</p>
 
-  <br><br>
-
-  <!-- Scanner -->
-  <div id="reader" style="width:300px;"></div>
-
-  <!-- Debug -->
-  <div id="debug" style="margin-top:28px; color:red; font-size:18px;"></div>
+<div id="reader" style="width:300px;"></div>
 
 <script>
 
-// ✅ debug visivo
-function debug(msg) {
-  console.log(msg);
-  document.getElementById("debug").innerText += msg + "\n";
-}
-
-// variabili
-let userName = "";
-let userId = "";
-let userEmail = "";
-let scanned = false;
+const status = document.getElementById("status");
 let html5QrCode;
 
-// ✅ inizializza Teams
-microsoftTeams.app.initialize().then(() => {
-  microsoftTeams.app.getContext().then(ctx => {
-    userName = ctx.user.displayName;
-    userId = ctx.user.id;
-    userEmail = ctx.user.userPrincipalName;
+function log(msg) {
+  console.log(msg);
+  status.innerText += "\n" + msg;
+}
 
-    debug("👤 Utente: " + userEmail);
-  });
-});
+document.getElementById("startBtn").addEventListener("click", async () => {
 
-// ✅ funzione quando legge QR
-function onScanSuccess(decodedText) {
+  status.innerText = "🔄 Avvio scanner...";
 
-  if (scanned) return;
-  scanned = true;
-
-  debug("✅ QR letto: " + decodedText);
-
-  fetch("https://4b8d92cb9522e43cb66e80c4f04df1.4c.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/186f84364ae04ca8a8aa8c114442c629/triggers/manual/paths/invoke?api-version=1", {  // 👈 SOSTITUISCI
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      site: decodedText,
-      user: userEmail,
-      userId: userId,
-      time: new Date().toISOString()
-    })
-  })
-  .then(() => {
-    debug("✅ Presenza registrata");
-
-    if (navigator.vibrate) {
-      navigator.vibrate(200);
+  try {
+    // ✅ controlla libreria
+    if (typeof Html5Qrcode === "undefined") {
+      log("❌ Libreria html5-qrcode NON caricata");
+      return;
     }
-  })
-  .catch(err => {
-    debug("❌ Errore invio: " + err);
-  })
-  .finally(() => {
-    setTimeout(() => {
-      scanned = false;
-    }, 5000);
-  });
-}
 
-// ✅ AVVIO CAMERA (FIX DEFINITIVO)
-function startScanner() {
+    log("✅ Libreria caricata");
 
-  debug("🔄 Avvio scanner...");
+    html5QrCode = new Html5Qrcode("reader");
 
-  navigator.mediaDevices.getUserMedia({ video: true })
-    .then(() => {
+    const devices = await Html5Qrcode.getCameras();
 
-      debug("✅ Permesso camera OK");
+    log("📷 Dispositivi trovati: " + devices.length);
 
-      html5QrCode = new Html5Qrcode("reader");
+    if (!devices.length) {
+      log("❌ Nessuna camera disponibile");
+      return;
+    }
 
-      Html5Qrcode.getCameras().then(devices => {
+    // ✅ selezione camera posteriore
+    let camera = devices.find(d =>
+      d.label.toLowerCase().includes("back") ||
+      d.label.toLowerCase().includes("rear")
+    );
 
-        debug("📷 Camere trovate: " + devices.length);
+    if (!camera) {
+      log("⚠️ Camera posteriore non trovata, uso default");
+      camera = devices[0];
+    }
 
-        if (devices && devices.length > 0) {
+    log("🎥 Uso camera: " + camera.label);
 
-          let cameraId = devices[0].id;
+    
+    await html5QrCode.start(
+      { facingMode: "environment" },   // ✅ FORZA POSTERIORE
+      { fps: 10, qrbox: 250 },
+      decodedText => {
 
-          debug("🎥 Uso camera: " + cameraId);
+log("✅ QR LETTO: " + decodedText);
 
-          html5QrCode.start(
-            cameraId,
-            {
-              fps: 10,
-              qrbox: 250
-            },
-            onScanSuccess
-          )
-          .then(() => {
-            debug("✅ Scanner avviato");
+        fetch(""https://4b8d92cb9522e43cb66e80c4f04df1.4c.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/186f84364ae04ca8a8aa8c114442c629/triggers/manual/paths/invoke?api-version=1",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            site: decodedText,
+            user: "test_user",   // temporaneo
+            userId: userId,
+            time: new Date().toISOString()
           })
-          .catch(err => {
-            debug("❌ Errore авvio: " + err);
-          });
+        })
+        .then(() => {
+          log("✅ Presenza registrata");
+        })
+        .catch(() => {
+          log("❌ Errore invio dati");
+        });
+      
+        html5QrCode.stop();
+      }
+    );
 
-        } else {
-          debug("❌ Nessuna camera trovata");
-        }
 
-      }).catch(err => {
-        debug("❌ Errore accesso camera: " + err.name + " - " + err.message);
-      });
+    log("✅ Scanner attivo (camera posteriore)");
 
-    })
-    .catch(() => {
-      debug("❌ Permesso camera NEGATO:");
-    });
-}
+  } catch (err) {
+    log("❌ ERRORE: " + err.message);
+    console.error(err);
+  }
+
+});
 
 </script>
 
 </body>
 </html>
-
