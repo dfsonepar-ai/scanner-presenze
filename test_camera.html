@@ -73,7 +73,27 @@ document.getElementById("startBtn").addEventListener("click", async () => {
       { facingMode: "environment" },   // ✅ FORZA POSTERIORE
       { fps: 10, qrbox: 250 },
       decodedText => {
-        log("✅ QR LETTO: " + decodedText);
+
+log("✅ QR LETTO: " + decodedText);
+
+        fetch("URL_FLOW_CORRETTO", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            site: decodedText,
+            user: "test_user",   // temporaneo
+            time: new Date().toISOString()
+          })
+        })
+        .then(() => {
+          log("✅ Presenza registrata");
+        })
+        .catch(() => {
+          log("❌ Errore invio dati");
+        });
+      
         html5QrCode.stop();
       }
     );
