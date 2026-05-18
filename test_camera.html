@@ -68,14 +68,16 @@ document.getElementById("startBtn").addEventListener("click", async () => {
 
     log("🎥 Uso camera: " + camera.label);
 
+    
     await html5QrCode.start(
-      camera.id,
+      { facingMode: "environment" },   // ✅ FORZA POSTERIORE
       { fps: 10, qrbox: 250 },
       decodedText => {
         log("✅ QR LETTO: " + decodedText);
         html5QrCode.stop();
       }
     );
+
 
     log("✅ Scanner attivo");
 
