@@ -17,7 +17,12 @@
 
   startBtn.addEventListener('click', () => {
     // Richiesta accesso alla fotocamera
-    navigator.mediaDevices.getUserMedia({ video: true })
+    navigator.mediaDevices.getUserMedia({
+      video: {
+      facingMode: { ideal: "environment" }
+     }
+      })
+
       .then(stream => {
         status.textContent = "Accesso alla fotocamera concesso.";
         video.srcObject = stream;
