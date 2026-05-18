@@ -76,7 +76,8 @@ document.getElementById("startBtn").addEventListener("click", async () => {
 
 log("✅ QR LETTO: " + decodedText);
 
-        fetch(""https://4b8d92cb9522e43cb66e80c4f04df1.4c.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/186f84364ae04ca8a8aa8c114442c629/triggers/manual/paths/invoke?api-version=1", {
+        fetch(""https://4b8d92cb9522e43cb66e80c4f04df1.4c.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/186f84364ae04ca8a8aa8c114442c629/triggers/manual/paths/invoke?api-version=1",
+        {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -84,6 +85,7 @@ log("✅ QR LETTO: " + decodedText);
           body: JSON.stringify({
             site: decodedText,
             user: "test_user",   // temporaneo
+            userId: userId,
             time: new Date().toISOString()
           })
         })
