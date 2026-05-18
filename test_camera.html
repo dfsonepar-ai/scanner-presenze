@@ -2,10 +2,10 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8" />
-<title>Scanner QR Test</title>
+<title>Scanner QR Presenze</title>
 
-<!-- ✅ Libreria corretta -->
-<script src="html5-qrcode.min.js"></script>
+<!-- Libreria QR LOCALE -->
+<script src="./html5-qrcode.min.js"></script>
 
 </head>
 
@@ -13,11 +13,11 @@
 
 <h2>Scanner QR Presenze</h2>
 
-<button id="startBtn" style="padding:10px; font-size:16px;">
+<button id="startBtn" style="padding:10px 20px; font-size:16px;">
 📷 Avvia Scansione
 </button>
 
-<p id="status">Premi il pulsante</p>
+<p id="status">Premi il pulsante per iniziare</p>
 
 <div id="reader" style="width:300px;"></div>
 
@@ -25,87 +25,88 @@
 
 const status = document.getElementById("status");
 let html5QrCode;
+let scanned = false;
 
+// ✅ funzione log
 function log(msg) {
   console.log(msg);
   status.innerText += "\n" + msg;
 }
 
+// ✅ click pulsante
 document.getElementById("startBtn").addEventListener("click", async () => {
 
   status.innerText = "🔄 Avvio scanner...";
 
   try {
-    // ✅ controlla libreria
+
+    // ✅ controllo libreria
     if (typeof Html5Qrcode === "undefined") {
-      log("❌ Libreria html5-qrcode NON caricata");
+      log("❌ Libreria NON caricata");
       return;
     }
 
-    log("✅ Libreria caricata");
+    log("✅ Libreria OK");
 
     html5QrCode = new Html5Qrcode("reader");
 
+    // ✅ prendi dispositivi
     const devices = await Html5Qrcode.getCameras();
 
-    log("📷 Dispositivi trovati: " + devices.length);
+    log("📷 Camere trovate: " + devices.length);
 
     if (!devices.length) {
       log("❌ Nessuna camera disponibile");
       return;
     }
 
-    // ✅ selezione camera posteriore
-    let camera = devices.find(d =>
-      d.label.toLowerCase().includes("back") ||
-      d.label.toLowerCase().includes("rear")
-    );
-
-    if (!camera) {
-      log("⚠️ Camera posteriore non trovata, uso default");
-      camera = devices[0];
-    }
-
-    log("🎥 Uso camera: " + camera.label);
-
-    
+    // ✅ forza camera posteriore
     await html5QrCode.start(
-      { facingMode: "environment" },   // ✅ FORZA POSTERIORE
+      { facingMode: "environment" },
       { fps: 10, qrbox: 250 },
+
+      // ✅ quando legge QR
       decodedText => {
 
-log("✅ QR LETTO: " + decodedText);
+        if (scanned) return;
+        scanned = true;
 
-        fetch(""https://4b8d92cb9522e43cb66e80c4f04df1.4c.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/186f84364ae04ca8a8aa8c114442c629/triggers/manual/paths/invoke?api-version=1",
-        {
+        log("✅ QR LETTO: " + decodedText);
+
+        // ✅ CHIAMATA AL TUO FLOW
+        fetch("https://4b8d92cb9522e43cb66e80c4f04df1.4c.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/186f84364ae04ca8a8aa8c114442c629/triggers/manual/paths/invoke?api-version=1", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
             site: decodedText,
-            user: "test_user",   // temporaneo
-            userId: userId,
+            user: "diego.francescon@sonepar.it", // 👉 metteremo Teams dopo
             time: new Date().toISOString()
           })
         })
         .then(() => {
           log("✅ Presenza registrata");
+
+          if (navigator.vibrate) {
+            navigator.vibrate(200);
+          }
         })
-        .catch(() => {
-          log("❌ Errore invio dati");
+        .catch(err => {
+          log("❌ Errore invio: " + err);
         });
-      
+
+        // ✅ stop scanner
         html5QrCode.stop();
+
       }
     );
 
-
-    log("✅ Scanner attivo (camera posteriore)");
+    log("✅ Scanner attivo");
 
   } catch (err) {
-    log("❌ ERRORE: " + err.message);
     console.error(err);
+    log("❌ ERRORE: " + err.message);
   }
 
 });
