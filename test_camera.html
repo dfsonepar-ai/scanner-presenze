@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <title>Scanner QR Test</title>
 
-<!-- Libreria QR -->
+<!-- ✅ Libreria corretta -->
 <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 
 </head>
@@ -13,33 +13,56 @@
 
 <h2>Scanner QR Presenze</h2>
 
-<button id="startBtn" style="padding:10px 20px; font-size:16px;">
-  📷 Avvia Scansione
+<button id="startBtn" style="padding:10px; font-size:16px;">
+📷 Avvia Scansione
 </button>
 
-<p id="status">Premi il pulsante per attivare la fotocamera</p>
+<p id="status">Premi il pulsante</p>
 
-<div id="reader" style="width:320px;"></div>
+<div id="reader" style="width:300px;"></div>
 
 <script>
 
-const startBtn = document.getElementById('startBtn');
-const status = document.getElementById('status');
-
+const status = document.getElementById("status");
 let html5QrCode;
 
-// ✅ Quando premi bottone
-startBtn.addEventListener('click', () => {
+document.getElementById("startBtn").addEventListener("click", () => {
 
-  status.textContent = "🔄 Avvio camera...";
+  status.textContent = "🔄 Avvio scanner...";
 
   html5QrCode = new Html5Qrcode("reader");
 
   Html5Qrcode.getCameras().then(devices => {
 
-    if (devices && devices.length) {
+    if (devices.length) {
 
-      // ✅ scegli camera posteriore se esiste
-      const backCamera = devices.find(device =>
-        device.label.toLowerCase().includes('back') ||
+      // ✅ camera posteriore
+      const back = devices.find(d =>
+        d.label.toLowerCase().includes("back")
+      );
 
+      const cameraId = back ? back.id : devices[0].id;
+
+      html5QrCode.start(
+        cameraId,
+        { fps: 10, qrbox: 250 },
+        decodedText => {
+          status.textContent = "✅ QR: " + decodedText;
+          html5QrCode.stop();
+        }
+      );
+
+    } else {
+      status.textContent = "❌ Nessuna camera";
+    }
+
+  }).catch(err => {
+    status.textContent = "❌ Errore: " + err;
+  });
+
+});
+
+</script>
+
+</body>
+</html>
