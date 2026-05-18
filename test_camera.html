@@ -2,36 +2,44 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8" />
-<title>Test getUserMedia</title>
+<title>Scanner QR Test</title>
+
+<!-- Libreria QR -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
 </head>
+
 <body>
-<h2>Verifica accesso alla fotocamera</h2>
-<button id="startBtn">Avvia Fotocamera</button>
-<video id="video" width="320" height="240" autoplay></video>
-<p id="status"></p>
+
+<h2>Scanner QR Presenze</h2>
+
+<button id="startBtn" style="padding:10px 20px; font-size:16px;">
+  📷 Avvia Scansione
+</button>
+
+<p id="status">Premi il pulsante per attivare la fotocamera</p>
+
+<div id="reader" style="width:320px;"></div>
 
 <script>
-  const startBtn = document.getElementById('startBtn');
-  const video = document.getElementById('video');
-  const status = document.getElementById('status');
 
-  startBtn.addEventListener('click', () => {
-    // Richiesta accesso alla fotocamera
-    navigator.mediaDevices.getUserMedia({
-      video: {
-      facingMode: { ideal: "environment" }
-     }
-      })
+const startBtn = document.getElementById('startBtn');
+const status = document.getElementById('status');
 
-      .then(stream => {
-        status.textContent = "Accesso alla fotocamera concesso.";
-        video.srcObject = stream;
-      })
-      .catch(err => {
-        status.textContent = "Errore: " + err.name + " - " + err.message;
-        console.error(err);
-      });
-  });
-</script>
-</body>
-</html>
+let html5QrCode;
+
+// ✅ Quando premi bottone
+startBtn.addEventListener('click', () => {
+
+  status.textContent = "🔄 Avvio camera...";
+
+  html5QrCode = new Html5Qrcode("reader");
+
+  Html5Qrcode.getCameras().then(devices => {
+
+    if (devices && devices.length) {
+
+      // ✅ scegli camera posteriore se esiste
+      const backCamera = devices.find(device =>
+        device.label.toLowerCase().includes('back') ||
+
