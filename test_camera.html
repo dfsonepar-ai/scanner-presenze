@@ -82,20 +82,19 @@ document.getElementById("startBtn").addEventListener("click", async () => {
           body: JSON.stringify({
             site: decodedText,
             user: "diego.francescon@sonepar.it", // 👉 metteremo Teams dopo
+
             time: new Date().toISOString()
           })
         })
-        .then(() => {
-          log("✅ Presenza registrata");
-
-          if (navigator.vibrate) {
-            navigator.vibrate(200);
-          }
+        .then(res => {
+          log("✅ FETCH OK - chiamata inviata");
+          console.log(res);
         })
         .catch(err => {
-          log("❌ Errore invio: " + err);
+          log("❌ ERRORE FETCH: " + err);
+          console.error(err);
         });
-
+      
         // ✅ stop scanner
         html5QrCode.stop();
 
