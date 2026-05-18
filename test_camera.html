@@ -26,39 +26,63 @@
 const status = document.getElementById("status");
 let html5QrCode;
 
-document.getElementById("startBtn").addEventListener("click", () => {
+function log(msg) {
+  console.log(msg);
+  status.innerText += "\n" + msg;
+}
 
-  status.textContent = "🔄 Avvio scanner...";
+document.getElementById("startBtn").addEventListener("click", async () => {
 
-  html5QrCode = new Html5Qrcode("reader");
+  status.innerText = "🔄 Avvio scanner...";
 
-  Html5Qrcode.getCameras().then(devices => {
-
-    if (devices.length) {
-
-      // ✅ camera posteriore
-      const back = devices.find(d =>
-        d.label.toLowerCase().includes("back")
-      );
-
-      const cameraId = back ? back.id : devices[0].id;
-
-      html5QrCode.start(
-        cameraId,
-        { fps: 10, qrbox: 250 },
-        decodedText => {
-          status.textContent = "✅ QR: " + decodedText;
-          html5QrCode.stop();
-        }
-      );
-
-    } else {
-      status.textContent = "❌ Nessuna camera";
+  try {
+    // ✅ controlla libreria
+    if (typeof Html5Qrcode === "undefined") {
+      log("❌ Libreria html5-qrcode NON caricata");
+      return;
     }
 
-  }).catch(err => {
-    status.textContent = "❌ Errore: " + err;
-  });
+    log("✅ Libreria caricata");
+
+    html5QrCode = new Html5Qrcode("reader");
+
+    const devices = await Html5Qrcode.getCameras();
+
+    log("📷 Dispositivi trovati: " + devices.length);
+
+    if (!devices.length) {
+      log("❌ Nessuna camera disponibile");
+      return;
+    }
+
+    // ✅ selezione camera posteriore
+    let camera = devices.find(d =>
+      d.label.toLowerCase().includes("back") ||
+      d.label.toLowerCase().includes("rear")
+    );
+
+    if (!camera) {
+      log("⚠️ Camera posteriore non trovata, uso default");
+      camera = devices[0];
+    }
+
+    log("🎥 Uso camera: " + camera.label);
+
+    await html5QrCode.start(
+      camera.id,
+      { fps: 10, qrbox: 250 },
+      decodedText => {
+        log("✅ QR LETTO: " + decodedText);
+        html5QrCode.stop();
+      }
+    );
+
+    log("✅ Scanner attivo");
+
+  } catch (err) {
+    log("❌ ERRORE: " + err.message);
+    console.error(err);
+  }
 
 });
 
